@@ -10,6 +10,19 @@ npm run smoke
 node bin/skillrun-ci-harness.js examples/skill-fixture.json --format json
 ```
 
+## Release readiness
+
+Run the same checks as CI before publishing or tagging:
+
+```bash
+npm run release:check
+npm run package:smoke
+```
+
+`npm run package:smoke` performs an `npm pack --dry-run` and verifies that the
+published tarball contains the CLI, source files, fixture, skill instructions,
+README, license, and manifest.
+
 ## Fixture shape
 
 A fixture contains `skill`, `files`, `commands`, and `cases`. Commands are declarations only; the harness never executes them.
