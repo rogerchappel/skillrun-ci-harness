@@ -1,0 +1,35 @@
+{
+  "skill": {
+    "name": "repo-summary-skill",
+    "when": "Use when an agent needs to summarize repository changes."
+  },
+  "files": [
+    {
+      "path": "SKILL.md",
+      "purpose": "Skill operating instructions"
+    },
+    {
+      "path": "docs/PRD.md",
+      "purpose": "Product context"
+    }
+  ],
+  "commands": [
+    {
+      "name": "tests",
+      "command": "npm test",
+      "sideEffect": "read-only"
+    },
+    {
+      "name": "smoke",
+      "command": "npm run smoke",
+      "sideEffect": "read-only"
+    }
+  ],
+  "cases": [
+    {
+      "name": "valid repo summary",
+      "input": "fixtures/repo.json",
+      "expectedEvidence": "Markdown summary with changed files and risks"
+    }
+  ]
+}
