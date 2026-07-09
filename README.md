@@ -36,3 +36,7 @@ A fixture contains `skill`, `files`, `commands`, and `cases`. Commands are decla
 ## Safety
 
 This tool is safe for CI because it reads fixture data and prints reports. Treat any declared command with `writes-local` or `external` as requiring separate approval before execution.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for supported reporting paths and local-first scope. Do not include private fixtures, credentials, or unreleased connector payloads in public issues.
