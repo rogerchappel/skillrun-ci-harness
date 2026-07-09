@@ -24,6 +24,10 @@
     "type": "git",
     "url": "git+https://github.com/rogerchappel/skillrun-ci-harness.git"
   },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/skillrun-ci-harness/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/skillrun-ci-harness#readme",
   "author": "Roger Chappel",
   "license": "MIT",
   "engines": {
@@ -36,6 +40,7 @@
     "examples",
     "SKILL.md",
     "README.md",
+    "SECURITY.md",
     "LICENSE"
   ]
 }

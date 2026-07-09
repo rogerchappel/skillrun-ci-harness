@@ -12,6 +12,7 @@ const required = [
   'examples/skill-fixture.json',
   'SKILL.md',
   'README.md',
+  'SECURITY.md',
   'LICENSE',
   'package.json'
 ];
