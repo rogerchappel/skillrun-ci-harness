@@ -10,6 +10,10 @@ npm run smoke
 node bin/skillrun-ci-harness.js examples/skill-fixture.json --format json
 ```
 
+The optional `--format` value must be `json` (the default) or `markdown`.
+Unsupported or missing format values print usage information and exit without
+generating a report.
+
 ## Release readiness
 
 Run the same checks as CI before publishing or tagging:
