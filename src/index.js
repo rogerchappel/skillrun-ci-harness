@@ -1,21 +1,29 @@
 import fs from 'node:fs';
 
+const normalizationFindings = Symbol('normalizationFindings');
+
 export function loadFixture(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
   return normalizeFixture(JSON.parse(raw));
 }
 
 export function normalizeFixture(fixture) {
-  return {
-    skill: fixture.skill ?? {},
-    files: Array.isArray(fixture.files) ? fixture.files : [],
-    commands: Array.isArray(fixture.commands) ? fixture.commands : [],
-    cases: Array.isArray(fixture.cases) ? fixture.cases : [],
+  const findings = [];
+  const source = isRecord(fixture) ? fixture : {};
+  if (!isRecord(fixture)) findings.push(finding('error', 'fixture', 'Fixture root must be an object.'));
+
+  const normalized = {
+    skill: normalizeObject(source.skill, 'skill', findings),
+    files: normalizeObjectArray(source.files, 'files', findings),
+    commands: normalizeObjectArray(source.commands, 'commands', findings),
+    cases: normalizeObjectArray(source.cases, 'cases', findings),
   };
+  Object.defineProperty(normalized, normalizationFindings, { value: findings });
+  return normalized;
 }
 
 export function validateFixture(fixture) {
-  const findings = [];
+  const findings = [...(fixture[normalizationFindings] ?? [])];
   if (!fixture.skill.name) findings.push(finding('error', 'skill.name', 'Skill name is required.'));
   if (!fixture.skill.when) findings.push(finding('error', 'skill.when', 'Skill trigger guidance is required.'));
   if (fixture.files.length === 0) findings.push(finding('error', 'files', 'At least one required file must be declared.'));
@@ -35,6 +43,28 @@ export function validateFixture(fixture) {
   }
   return { ok: findings.every((item) => item.severity !== 'error'), counts: countBySeverity(findings), findings, plan: buildPlan(fixture) };
 }
+
+function normalizeObject(value, path, findings) {
+  if (value === undefined) return {};
+  if (isRecord(value)) return value;
+  findings.push(finding('error', path, `${path} must be an object.`));
+  return {};
+}
+
+function normalizeObjectArray(value, path, findings) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    findings.push(finding('error', path, `${path} must be an array.`));
+    return [];
+  }
+  return value.map((item, index) => {
+    if (isRecord(item)) return item;
+    findings.push(finding('error', `${path}[${index}]`, `Each ${path} entry must be an object.`));
+    return {};
+  });
+}
+
+function isRecord(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
 
 function finding(severity, path, message) { return { severity, path, message }; }
 function countBySeverity(findings) { return findings.reduce((acc, item) => { acc[item.severity] = (acc[item.severity] ?? 0) + 1; return acc; }, { error: 0, warning: 0 }); }
