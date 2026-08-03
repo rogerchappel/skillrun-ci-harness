@@ -11,8 +11,15 @@ node bin/skillrun-ci-harness.js examples/skill-fixture.json --format json
 ```
 
 The optional `--format` value must be `json` (the default) or `markdown`.
-Unsupported or missing format values print usage information and exit without
+`--help` prints the usage line. Unknown options, extra fixture paths, duplicate
+`--format` options, and unsupported or missing format values print a concise
+error plus usage information to stderr and exit with status 64 without
 generating a report.
+
+The CLI exits with status 0 for a valid fixture and 2 when a report contains
+validation errors. Invalid JSON exits with status 65, while a fixture that
+cannot be read exits with status 66; both failures produce a concise stderr
+message without a JavaScript stack trace.
 
 ## Release readiness
 
@@ -29,7 +36,10 @@ README, license, and manifest.
 
 ## Fixture shape
 
-A fixture contains `skill`, `files`, `commands`, and `cases`. Commands are declarations only; the harness never executes them.
+A fixture is a JSON object containing an object-valued `skill` plus arrays of
+object-valued `files`, `commands`, and `cases`. Shape errors—including a null
+root or null/scalar array entries—are returned as structured validation
+findings. Commands are declarations only; the harness never executes them.
 
 ## Limitations
 
