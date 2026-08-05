@@ -48,6 +48,54 @@ test('non-array collection sections become structured findings', () => {
   }
 });
 
+test('fixture text fields reject non-string values at their exact paths', () => {
+  const valid = {
+    skill: { name: 'x', when: 'on request' },
+    files: [{ path: 'SKILL.md', purpose: 'instructions' }],
+    commands: [{ name: 'test', command: 'npm test', sideEffect: 'read-only' }],
+    cases: [{ name: 'case', expectedEvidence: 'report' }],
+  };
+  const fields = [
+    ['skill', 'name'], ['skill', 'when'],
+    ['files', 'path'], ['files', 'purpose'],
+    ['commands', 'name'], ['commands', 'command'], ['commands', 'sideEffect'],
+    ['cases', 'name'], ['cases', 'expectedEvidence'],
+  ];
+
+  for (const value of [null, 42, true, [], {}]) {
+    for (const [section, field] of fields) {
+      const fixture = structuredClone(valid);
+      const target = Array.isArray(fixture[section]) ? fixture[section][0] : fixture[section];
+      target[field] = value;
+      const result = validateFixture(normalizeFixture(fixture));
+      const path = `${section}${Array.isArray(fixture[section]) ? '[0]' : ''}.${field}`;
+
+      assert.equal(result.ok, false, `${path} accepted ${JSON.stringify(value)}`);
+      assert.ok(result.findings.some((item) => item.path === path), `missing finding for ${path}`);
+      for (const command of result.plan) {
+        assert.notEqual(typeof command.name, 'object');
+        assert.notEqual(typeof command.command, 'object');
+        assert.notEqual(typeof command.sideEffect, 'object');
+      }
+    }
+  }
+});
+
+test('required text fields reject empty strings while valid text remains accepted', () => {
+  const fixture = normalizeFixture({
+    skill: { name: '', when: '' },
+    files: [{ path: '', purpose: '' }],
+    commands: [{ name: '', command: '', sideEffect: '' }],
+    cases: [{ name: '', expectedEvidence: '' }],
+  });
+  const result = validateFixture(fixture);
+
+  assert.equal(result.ok, false);
+  for (const path of ['skill.name', 'skill.when', 'files.path', 'commands', 'cases.name']) {
+    assert.ok(result.findings.some((item) => item.path === path), `missing finding for ${path}`);
+  }
+});
+
 test('markdown report includes side-effect boundary', () => {
   const result = validateFixture(normalizeFixture({ skill: { name: 'x', when: 'on request' }, files: [{ path: 'SKILL.md', purpose: 'instructions' }], commands: [{ name: 'smoke', command: 'npm run smoke', sideEffect: 'read-only' }], cases: [{ name: 'case', expectedEvidence: 'report' }] }));
   assert.match(toMarkdownReport(result), /execute=false/);

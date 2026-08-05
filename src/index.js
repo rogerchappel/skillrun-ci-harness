@@ -13,10 +13,13 @@ export function normalizeFixture(fixture) {
   if (!isRecord(fixture)) findings.push(finding('error', 'fixture', 'Fixture root must be an object.'));
 
   const normalized = {
-    skill: normalizeObject(source.skill, 'skill', findings),
-    files: normalizeObjectArray(source.files, 'files', findings),
-    commands: normalizeObjectArray(source.commands, 'commands', findings),
-    cases: normalizeObjectArray(source.cases, 'cases', findings),
+    skill: normalizeTextFields(normalizeObject(source.skill, 'skill', findings), 'skill', ['name', 'when'], findings),
+    files: normalizeObjectArray(source.files, 'files', findings)
+      .map((file, index) => normalizeTextFields(file, `files[${index}]`, ['path', 'purpose'], findings)),
+    commands: normalizeObjectArray(source.commands, 'commands', findings)
+      .map((command, index) => normalizeTextFields(command, `commands[${index}]`, ['name', 'command', 'sideEffect'], findings)),
+    cases: normalizeObjectArray(source.cases, 'cases', findings)
+      .map((testCase, index) => normalizeTextFields(testCase, `cases[${index}]`, ['name', 'expectedEvidence'], findings)),
   };
   Object.defineProperty(normalized, normalizationFindings, { value: findings });
   return normalized;
@@ -62,6 +65,16 @@ function normalizeObjectArray(value, path, findings) {
     findings.push(finding('error', `${path}[${index}]`, `Each ${path} entry must be an object.`));
     return {};
   });
+}
+
+function normalizeTextFields(record, path, fields, findings) {
+  const normalized = { ...record };
+  for (const field of fields) {
+    if (record[field] === undefined || typeof record[field] === 'string') continue;
+    findings.push(finding('error', `${path}.${field}`, `${path}.${field} must be a string.`));
+    normalized[field] = undefined;
+  }
+  return normalized;
 }
 
 function isRecord(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }

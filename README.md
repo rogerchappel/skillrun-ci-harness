@@ -41,6 +41,20 @@ object-valued `files`, `commands`, and `cases`. Shape errors—including a null
 root or null/scalar array entries—are returned as structured validation
 findings. Commands are declarations only; the harness never executes them.
 
+The following fields are strings:
+
+- `skill.name` and `skill.when`
+- each `files[].path` and `files[].purpose`
+- each `commands[].name`, `commands[].command`, and `commands[].sideEffect`
+- each `cases[].name` and `cases[].expectedEvidence`
+
+Names, trigger guidance, file paths, command text, and case names must be
+non-empty. File purpose and expected evidence are recommended and produce
+warnings when empty. `commands[].sideEffect` must be `read-only`,
+`writes-local`, or `external`. Nulls, numbers, booleans, arrays, and objects in
+these fields produce path-specific errors such as `commands[0].command`; they
+are removed during normalization and never enter the dry-run plan.
+
 ## Limitations
 
 - JSON fixtures only in the initial release.
