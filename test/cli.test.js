@@ -121,3 +121,32 @@ test('CLI returns structured findings for null roots and entries', () => {
     rmSync(directory, { recursive: true });
   }
 });
+
+test('CLI exits 2 and sanitizes malformed text fields from the dry-run plan', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'skillrun-cli-'));
+  const fixture = join(directory, 'malformed-fields.json');
+  writeFileSync(fixture, JSON.stringify({
+    skill: { name: [], when: {} },
+    files: [{ path: [], purpose: {} }],
+    commands: [{ name: [], command: {}, sideEffect: 'read-only' }],
+    cases: [{ name: [], expectedEvidence: {} }],
+  }));
+
+  try {
+    const result = runCli(fixture, '--format', 'json');
+    const report = JSON.parse(result.stdout);
+
+    assert.equal(result.status, 2);
+    assert.equal(report.ok, false);
+    assert.equal(result.stderr, '');
+    for (const path of [
+      'skill.name', 'skill.when', 'files[0].path', 'files[0].purpose',
+      'commands[0].name', 'commands[0].command', 'cases[0].name', 'cases[0].expectedEvidence',
+    ]) {
+      assert.ok(report.findings.some((item) => item.path === path), `missing finding for ${path}`);
+    }
+    assert.deepEqual(report.plan, [{ sideEffect: 'read-only', execute: false }]);
+  } finally {
+    rmSync(directory, { recursive: true });
+  }
+});
