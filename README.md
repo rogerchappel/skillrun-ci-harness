@@ -49,8 +49,10 @@ The following fields are strings:
 - each `cases[].name` and `cases[].expectedEvidence`
 
 Names, trigger guidance, file paths, command text, and case names must be
-non-empty. File purpose and expected evidence are recommended and produce
-warnings when empty. `commands[].sideEffect` must be `read-only`,
+non-empty after surrounding whitespace is trimmed; whitespace-only values are
+treated as empty and omitted from the dry-run command plan. File purpose and
+expected evidence are recommended and produce warnings when empty.
+`commands[].sideEffect` must be `read-only`,
 `writes-local`, or `external`. Nulls, numbers, booleans, arrays, and objects in
 these fields produce path-specific errors such as `commands[0].command`; they
 are removed during normalization and never enter the dry-run plan.
