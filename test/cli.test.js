@@ -150,3 +150,32 @@ test('CLI exits 2 and sanitizes malformed text fields from the dry-run plan', ()
     rmSync(directory, { recursive: true });
   }
 });
+
+test('CLI exits 2 and sanitizes whitespace-only required text fields', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'skillrun-cli-'));
+  const fixture = join(directory, 'whitespace-fields.json');
+  writeFileSync(fixture, JSON.stringify({
+    skill: { name: '   ', when: '\t' },
+    files: [{ path: '\n', purpose: 'instructions' }],
+    commands: [{ name: ' \t ', command: '\r\n', sideEffect: 'read-only' }],
+    cases: [{ name: '\n', expectedEvidence: 'report' }],
+  }));
+
+  try {
+    const result = runCli(fixture, '--format', 'json');
+    const report = JSON.parse(result.stdout);
+
+    assert.equal(result.status, 2);
+    assert.equal(report.ok, false);
+    assert.equal(result.stderr, '');
+    for (const path of [
+      'skill.name', 'skill.when', 'files[0].path',
+      'commands[0].name', 'commands[0].command', 'cases[0].name',
+    ]) {
+      assert.ok(report.findings.some((item) => item.path === path), `missing finding for ${path}`);
+    }
+    assert.deepEqual(report.plan, [{ sideEffect: 'read-only', execute: false }]);
+  } finally {
+    rmSync(directory, { recursive: true });
+  }
+});

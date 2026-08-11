@@ -91,9 +91,31 @@ test('required text fields reject empty strings while valid text remains accepte
   const result = validateFixture(fixture);
 
   assert.equal(result.ok, false);
-  for (const path of ['skill.name', 'skill.when', 'files.path', 'commands', 'cases.name']) {
+  for (const path of [
+    'skill.name', 'skill.when', 'files[0].path',
+    'commands[0].name', 'commands[0].command', 'cases[0].name',
+  ]) {
     assert.ok(result.findings.some((item) => item.path === path), `missing finding for ${path}`);
   }
+});
+
+test('whitespace-only required text fields are normalized and rejected at exact paths', () => {
+  const fixture = normalizeFixture({
+    skill: { name: '   ', when: '\t' },
+    files: [{ path: '\n', purpose: 'instructions' }],
+    commands: [{ name: ' \t ', command: '\n\t', sideEffect: 'read-only' }],
+    cases: [{ name: '\r\n', expectedEvidence: 'report' }],
+  });
+  const result = validateFixture(fixture);
+
+  assert.equal(result.ok, false);
+  for (const path of [
+    'skill.name', 'skill.when', 'files[0].path',
+    'commands[0].name', 'commands[0].command', 'cases[0].name',
+  ]) {
+    assert.ok(result.findings.some((item) => item.path === path), `missing finding for ${path}`);
+  }
+  assert.deepEqual(result.plan, [{ sideEffect: 'read-only', execute: false }]);
 });
 
 test('markdown report includes side-effect boundary', () => {
