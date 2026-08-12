@@ -5,7 +5,7 @@ Local-first acceptance harness for agent skill fixtures. It checks that a skill 
 ## Quickstart
 
 ```bash
-npm install
+npm ci
 npm run smoke
 node bin/skillrun-ci-harness.js examples/skill-fixture.json --format json
 ```
@@ -26,13 +26,18 @@ message without a JavaScript stack trace.
 Run the same checks as CI before publishing or tagging:
 
 ```bash
+npm ci
 npm run release:check
-npm run package:smoke
 ```
 
-`npm run package:smoke` performs an `npm pack --dry-run` and verifies that the
-published tarball contains the CLI, source files, fixture, skill instructions,
-README, license, and manifest.
+The tracked `package-lock.json` is the reproducible dependency contract for a
+fresh checkout. CI installs exactly that dependency graph with `npm ci` before
+running `release:check`; rerun both commands locally after changing the
+manifest or lockfile.
+
+`npm run release:check` includes `package:smoke`, which performs an
+`npm pack --dry-run` and verifies that the published tarball contains the CLI,
+source files, fixture, skill instructions, README, license, and manifest.
 
 ## Fixture shape
 
