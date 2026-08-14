@@ -115,7 +115,7 @@ test('whitespace-only required text fields are normalized and rejected at exact 
   ]) {
     assert.ok(result.findings.some((item) => item.path === path), `missing finding for ${path}`);
   }
-  assert.deepEqual(result.plan, [{ sideEffect: 'read-only', execute: false }]);
+  assert.deepEqual(result.plan, []);
 });
 
 test('markdown report includes side-effect boundary', () => {
