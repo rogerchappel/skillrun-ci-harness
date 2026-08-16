@@ -87,10 +87,12 @@ function isRecord(value) { return value !== null && typeof value === 'object' &&
 function finding(severity, path, message) { return { severity, path, message }; }
 function countBySeverity(findings) { return findings.reduce((acc, item) => { acc[item.severity] = (acc[item.severity] ?? 0) + 1; return acc; }, { error: 0, warning: 0 }); }
 function buildPlan(fixture) {
-  return fixture.commands.map((command) => ({
-    ...(command.name === undefined ? {} : { name: command.name }),
-    ...(command.command === undefined ? {} : { command: command.command }),
-    ...(command.sideEffect === undefined ? {} : { sideEffect: command.sideEffect }),
-    execute: false,
-  }));
+  return fixture.commands
+    .filter((command) => command.name && command.command && ['read-only', 'writes-local', 'external'].includes(command.sideEffect))
+    .map((command) => ({
+      name: command.name,
+      command: command.command,
+      sideEffect: command.sideEffect,
+      execute: false,
+    }));
 }

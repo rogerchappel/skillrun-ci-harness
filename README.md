@@ -55,12 +55,14 @@ The following fields are strings:
 
 Names, trigger guidance, file paths, command text, and case names must be
 non-empty after surrounding whitespace is trimmed; whitespace-only values are
-treated as empty and omitted from the dry-run command plan. File purpose and
+treated as empty. A command declaration missing a valid name, command text, or
+side-effect value is omitted as a whole from JSON and Markdown dry-run plans.
+Its path-specific validation findings remain in the report. File purpose and
 expected evidence are recommended and produce warnings when empty.
 `commands[].sideEffect` must be `read-only`,
 `writes-local`, or `external`. Nulls, numbers, booleans, arrays, and objects in
-these fields produce path-specific errors such as `commands[0].command`; they
-are removed during normalization and never enter the dry-run plan.
+these fields produce path-specific errors such as `commands[0].command`; an
+affected command declaration never enters the dry-run plan.
 
 ## Limitations
 

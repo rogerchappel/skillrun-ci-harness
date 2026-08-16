@@ -122,7 +122,7 @@ test('CLI returns structured findings for null roots and entries', () => {
   }
 });
 
-test('CLI exits 2 and sanitizes malformed text fields from the dry-run plan', () => {
+test('Markdown CLI exits 2 and omits commands with malformed text fields', () => {
   const directory = mkdtempSync(join(tmpdir(), 'skillrun-cli-'));
   const fixture = join(directory, 'malformed-fields.json');
   writeFileSync(fixture, JSON.stringify({
@@ -133,25 +133,24 @@ test('CLI exits 2 and sanitizes malformed text fields from the dry-run plan', ()
   }));
 
   try {
-    const result = runCli(fixture, '--format', 'json');
-    const report = JSON.parse(result.stdout);
+    const result = runCli(fixture, '--format', 'markdown');
 
     assert.equal(result.status, 2);
-    assert.equal(report.ok, false);
     assert.equal(result.stderr, '');
     for (const path of [
       'skill.name', 'skill.when', 'files[0].path', 'files[0].purpose',
       'commands[0].name', 'commands[0].command', 'cases[0].name', 'cases[0].expectedEvidence',
     ]) {
-      assert.ok(report.findings.some((item) => item.path === path), `missing finding for ${path}`);
+      assert.match(result.stdout, new RegExp(path.replaceAll('[', '\\[').replaceAll(']', '\\]')));
     }
-    assert.deepEqual(report.plan, [{ sideEffect: 'read-only', execute: false }]);
+    assert.match(result.stdout, /## Dry-run Command Plan\n- No commands declared\./);
+    assert.doesNotMatch(result.stdout, /undefined/);
   } finally {
     rmSync(directory, { recursive: true });
   }
 });
 
-test('CLI exits 2 and sanitizes whitespace-only required text fields', () => {
+test('Markdown CLI exits 2 and omits commands with whitespace-only required text fields', () => {
   const directory = mkdtempSync(join(tmpdir(), 'skillrun-cli-'));
   const fixture = join(directory, 'whitespace-fields.json');
   writeFileSync(fixture, JSON.stringify({
@@ -162,19 +161,18 @@ test('CLI exits 2 and sanitizes whitespace-only required text fields', () => {
   }));
 
   try {
-    const result = runCli(fixture, '--format', 'json');
-    const report = JSON.parse(result.stdout);
+    const result = runCli(fixture, '--format', 'markdown');
 
     assert.equal(result.status, 2);
-    assert.equal(report.ok, false);
     assert.equal(result.stderr, '');
     for (const path of [
       'skill.name', 'skill.when', 'files[0].path',
       'commands[0].name', 'commands[0].command', 'cases[0].name',
     ]) {
-      assert.ok(report.findings.some((item) => item.path === path), `missing finding for ${path}`);
+      assert.match(result.stdout, new RegExp(path.replaceAll('[', '\\[').replaceAll(']', '\\]')));
     }
-    assert.deepEqual(report.plan, [{ sideEffect: 'read-only', execute: false }]);
+    assert.match(result.stdout, /## Dry-run Command Plan\n- No commands declared\./);
+    assert.doesNotMatch(result.stdout, /undefined/);
   } finally {
     rmSync(directory, { recursive: true });
   }
