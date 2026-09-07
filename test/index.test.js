@@ -10,6 +10,32 @@ test('valid fixture passes and creates dry-run plan', () => {
   assert.equal(result.plan[0].execute, false);
 });
 
+test('Markdown renders fixture-controlled commands as one unambiguous plan entry', () => {
+  const fixture = normalizeFixture({
+    skill: { name: 'x', when: 'on request' },
+    files: [{ path: 'SKILL.md', purpose: 'instructions' }],
+    commands: [{
+      name: 'test\n- injected: `label`',
+      command: 'printf `nested`\necho done',
+      sideEffect: 'read-only',
+    }],
+    cases: [{ name: 'case', expectedEvidence: 'report' }],
+  });
+  const result = validateFixture(fixture);
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.plan[0], {
+    name: 'test\n- injected: `label`',
+    command: 'printf `nested`\necho done',
+    sideEffect: 'read-only',
+    execute: false,
+  });
+  assert.match(
+    toMarkdownReport(result),
+    /- test\\n\\- injected: \\`label\\`: ``printf `nested`\\necho done`` \(read-only, execute=false\)/,
+  );
+});
+
 test('missing required fields fail with useful paths', () => {
   const result = validateFixture(normalizeFixture({}));
   assert.equal(result.ok, false);
