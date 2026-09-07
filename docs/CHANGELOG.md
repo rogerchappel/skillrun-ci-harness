@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Render multiline and backtick-containing fixture commands as unambiguous,
+  single-entry Markdown plans without changing JSON report values.
+
 ## 0.1.0
 
 - Initial local fixture harness.

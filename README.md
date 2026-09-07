@@ -64,6 +64,13 @@ expected evidence are recommended and produce warnings when empty.
 these fields produce path-specific errors such as `commands[0].command`; an
 affected command declaration never enters the dry-run plan.
 
+Markdown reports render every command as exactly one list entry. Control
+characters in command names and text are displayed as `\\n`, `\\r`, or `\\t`;
+Markdown punctuation in names is escaped; and command text uses a backtick
+fence longer than any backtick run it contains. This rendering changes only
+the Markdown presentation: JSON reports preserve the normalized command name
+and text exactly.
+
 ## Limitations
 
 - JSON fixtures only in the initial release.
