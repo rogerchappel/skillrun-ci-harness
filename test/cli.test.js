@@ -31,6 +31,39 @@ test('CLI emits Markdown for the markdown format', () => {
   assert.equal(result.stderr, '');
 });
 
+test('CLI safely renders multiline names and embedded backticks without changing JSON', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'skillrun-cli-'));
+  const fixture = join(directory, 'markdown-content.json');
+  const command = {
+    name: 'test\n- injected: `label`',
+    command: 'printf `nested`\necho done',
+    sideEffect: 'read-only',
+  };
+  writeFileSync(fixture, JSON.stringify({
+    skill: { name: 'x', when: 'on request' },
+    files: [{ path: 'SKILL.md', purpose: 'instructions' }],
+    commands: [command],
+    cases: [{ name: 'case', expectedEvidence: 'report' }],
+  }));
+
+  try {
+    const markdown = runCli(fixture, '--format', 'markdown');
+    const json = runCli(fixture, '--format', 'json');
+
+    assert.equal(markdown.status, 0);
+    assert.equal(json.status, 0);
+    assert.equal(markdown.stderr, '');
+    assert.deepEqual(JSON.parse(json.stdout).plan[0], { ...command, execute: false });
+    assert.match(
+      markdown.stdout,
+      /## Dry-run Command Plan\n- test\\n\\- injected: \\`label\\`: ``printf `nested`\\necho done`` \(read-only, execute=false\)\n$/,
+    );
+    assert.equal(markdown.stdout.split('\n').filter((line) => line.startsWith('- ')).length, 2);
+  } finally {
+    rmSync(directory, { recursive: true });
+  }
+});
+
 test('CLI rejects an unknown format', () => {
   const result = runCli(fixturePath, '--format', 'yaml');
 
