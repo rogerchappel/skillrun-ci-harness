@@ -51,6 +51,25 @@ test('non-object fixture roots become structured findings', () => {
   }
 });
 
+test('validateFixture rejects direct null and array inputs with structured findings', () => {
+  for (const fixture of [null, []]) {
+    const result = validateFixture(fixture);
+
+    assert.equal(result.ok, false);
+    assert.ok(result.findings.some((item) => item.path === 'fixture'));
+    assert.equal(result.counts.error, result.findings.filter((item) => item.severity === 'error').length);
+    assert.deepEqual(result.plan, []);
+  }
+});
+
+test('validateFixture normalizes plain object inputs before validation', () => {
+  const result = validateFixture({ skill: { name: '  x  ', when: 'on request' } });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.findings.some((item) => item.path === 'files'));
+  assert.deepEqual(result.plan, []);
+});
+
 test('malformed sections and array entries become structured findings', () => {
   const fixture = normalizeFixture({
     skill: null,
