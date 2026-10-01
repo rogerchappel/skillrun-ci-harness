@@ -26,6 +26,9 @@ export function normalizeFixture(fixture) {
 }
 
 export function validateFixture(fixture) {
+  if (!isRecord(fixture) || !Array.isArray(fixture.files) || !Array.isArray(fixture.commands) || !Array.isArray(fixture.cases)) {
+    fixture = normalizeFixture(fixture);
+  }
   const findings = [...(fixture[normalizationFindings] ?? [])];
   if (!fixture.skill.name) findings.push(finding('error', 'skill.name', 'Skill name is required.'));
   if (!fixture.skill.when) findings.push(finding('error', 'skill.when', 'Skill trigger guidance is required.'));
